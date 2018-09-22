@@ -1,14 +1,25 @@
 # nodemcu-temperature-sensor
 NodeMCU/ESP822 software that reads an AM2320 sensor connected via 1-wire and sends the temperature and humidity using HTTP over Wi-Fi.
 
-## Hardware components
+## Hardware
+
+### Components
 The following hardware components are used
 
 * NodeMCU V2 Development board WiFi ESP8266-12E ()
 * Temperatue and humidity sensor ASAIR AM2320 (https://www.adafruit.com/product/3721)
 * Breadboard
 
-## Setup
+### Wiring
+The pin numbers on the AM2320 is from left to right when you hold the sensor with the holes facing you.
+
+Connect
+* pin 1 on the AM2320 to 3V3 on the NodeMCU.
+* pin 2 on the AM2320 to D2 on the NodeMCU.
+* pin 3 and 3 on the AM2320 to GND on the NodeMCU.
+
+
+## Softare setup
 The setup instructions is loosely based on the Losant tutorial (https://www.losant.com/blog/getting-started-with-the-esp8266-and-dht22-sensor) and here is a summary of the steps performed:
 
 ### Drivers
