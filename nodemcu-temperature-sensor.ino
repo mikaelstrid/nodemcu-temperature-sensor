@@ -1,4 +1,6 @@
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#include <ArduinoJson.h>
 #include "DHT.h"
 
 #define DHTPIN 4 // = D2 on the NodeMCU
@@ -8,7 +10,7 @@ const char* sensor_id = "temp-1";
 const char* ssid = "SSID";
 const char* password = "PASSWORD";
 
-const char* host = "www.example.com";
+const char* host = "http://www.example.com";
 
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -47,34 +49,26 @@ void loop() {
   Serial.print(t);
   Serial.println(" *C ");
 
-  
-  WiFiClient client;
-  Serial.printf("\n[Connecting to %s ... ", host);
-  if (client.connect(host, 80))
-  {
-    Serial.println("connected]");
-    client.print(String("GET /") + " HTTP/1.1\r\n" +
-                 "Host: " + host + "\r\n" +
-                 "Connection: close\r\n" +
-                 "\r\n"
-                );
+  StaticJsonBuffer<200> jsonBuffer; 
+  JsonObject& root = jsonBuffer.createObject(); 
+  root["sensor"] = sensor_id; 
+  root["temperature"] = t; 
+  root["humidity"] = h; 
+  String jsonStr;
+  root.printTo(jsonStr);
+  Serial.println(jsonStr);
 
-    // Serial.println("[Response:]");
-    while (client.connected())
-    {
-      if (client.available())
-      {
-        String line = client.readStringUntil('\n');
-        // Serial.println(line);
-      }
-    }
-    client.stop();
-    Serial.println("\n[Disconnected]");
-  }
-  else 
-  {
-    Serial.println("connection failed!]");
-    client.stop();
+  HTTPClient http;
+  http.begin(host);
+  // http.addHeader("Content-Type", "application/json");
+  int httpResponseCode = http.GET();
+  // int httpResponseCode = http.POST(JSONmessageBuffer);
+
+  if (httpResponseCode == HTTP_CODE_OK) {
+    Serial.printf("Successfully connected to %s\n", host);
+    http.end();
+  } else {
+    Serial.printf("Failed to connect to host %s with response code %d and error %s\n", host, httpResponseCode, http.errorToString(httpResponseCode).c_str());
   }
   
   delay(3000);
