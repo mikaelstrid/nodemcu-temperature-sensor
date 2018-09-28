@@ -42,6 +42,7 @@ void setup() {
 
 
   // === READ SENSOR ===
+  delay(2000);
   int i = 1;
   float t = dht.readTemperature();
   float h = dht.readHumidity();
