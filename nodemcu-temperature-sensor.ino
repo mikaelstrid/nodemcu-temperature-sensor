@@ -8,23 +8,27 @@
 
 const char* ssid = "SSID";
 const char* password = "PASSWORD";
-
-String macAddress;
 const char* host = "http://192.168.86.34:8080/api/climate/temperature-humidity";
 
 DHT dht(DHTPIN, DHTTYPE);
+
+void goToSleep() {
+  Serial.println("Going into deep sleep for 20 seconds");
+  ESP.deepSleep(20e6); // 20e6 is 20 microseconds
+}
 
 void setup() {
   Serial.begin(9600);
   Serial.setTimeout(2000);
   while (!Serial) {}
 
-  macAddress = WiFi.macAddress();
+  String macAddress = WiFi.macAddress();
   Serial.print("\nTemperature/humidity sensor started");
   Serial.print("MAC address: ");
   Serial.println(macAddress);
   Serial.println("------------------------------");
 
+  // === CONNECT TO WIFI ===
   Serial.printf("Connecting to %s ", ssid);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED)
@@ -32,28 +36,23 @@ void setup() {
     delay(500);
     Serial.print(".");      
   }
-  
   Serial.print(" connected with ");
   Serial.println(WiFi.localIP());
   Serial.println("------------------------------");
-}
 
-void loop() {
+
+  // === READ SENSOR ===
   float t = dht.readTemperature();
   float h = dht.readHumidity();
 
   if (isnan(t) || isnan(t)) {
     Serial.println("Failed to read temperature/humidity from sensor");
+    goToSleep();
     return;
   }
 
-  Serial.print("Humidity: ");
-  Serial.print(h);
-  Serial.print(" %\t");
-  Serial.print("Temperature: ");
-  Serial.print(t);
-  Serial.println(" *C ");
 
+  // === CREATE JSON STRING ===
   StaticJsonBuffer<200> jsonBuffer; 
   JsonObject& root = jsonBuffer.createObject(); 
   root["sensorId"] = macAddress; 
@@ -63,6 +62,8 @@ void loop() {
   root.printTo(jsonStr);
   Serial.println(jsonStr);
 
+  
+  // === SEND TO API ===
   HTTPClient http;
   http.begin(host);
   http.addHeader("Content-Type", "application/json");
@@ -74,6 +75,11 @@ void loop() {
   } else {
     Serial.printf("Failed to connect to host %s with response code %d and error %s\n", host, httpResponseCode, http.errorToString(httpResponseCode).c_str());
   }
-  
-  delay(10000);
+
+
+  // GO TO SLEEP
+  goToSleep();
+}
+
+void loop() {
 }
