@@ -10,7 +10,7 @@ const char* sensor_id = "temp-1";
 const char* ssid = "SSID";
 const char* password = "PASSWORD";
 
-const char* host = "http://www.example.com";
+const char* host = "http://192.168.86.34:8080/api/climate/temperature-humidity";
 
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -51,7 +51,7 @@ void loop() {
 
   StaticJsonBuffer<200> jsonBuffer; 
   JsonObject& root = jsonBuffer.createObject(); 
-  root["sensor"] = sensor_id; 
+  root["sensorId"] = sensor_id; 
   root["temperature"] = t; 
   root["humidity"] = h; 
   String jsonStr;
@@ -60,16 +60,15 @@ void loop() {
 
   HTTPClient http;
   http.begin(host);
-  // http.addHeader("Content-Type", "application/json");
-  int httpResponseCode = http.GET();
-  // int httpResponseCode = http.POST(JSONmessageBuffer);
+  http.addHeader("Content-Type", "application/json");
+  int httpResponseCode = http.POST(jsonStr);
 
   if (httpResponseCode == HTTP_CODE_OK) {
-    Serial.printf("Successfully connected to %s\n", host);
+    Serial.printf("Successfully posted data to %s\n", host);
     http.end();
   } else {
     Serial.printf("Failed to connect to host %s with response code %d and error %s\n", host, httpResponseCode, http.errorToString(httpResponseCode).c_str());
   }
   
-  delay(3000);
+  delay(10000);
 }
