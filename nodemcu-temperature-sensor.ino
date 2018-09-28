@@ -6,10 +6,10 @@
 #define DHTPIN 4 // = D2 on the NodeMCU
 #define DHTTYPE DHT22
 
-const char* sensor_id = "temp-1";
 const char* ssid = "SSID";
 const char* password = "PASSWORD";
 
+String macAddress;
 const char* host = "http://192.168.86.34:8080/api/climate/temperature-humidity";
 
 DHT dht(DHTPIN, DHTTYPE);
@@ -19,7 +19,10 @@ void setup() {
   Serial.setTimeout(2000);
   while (!Serial) {}
 
-  Serial.printf("\n%s started\n", sensor_id);
+  macAddress = WiFi.macAddress();
+  Serial.print("\nTemperature/humidity sensor started");
+  Serial.print("MAC address: ");
+  Serial.println(macAddress);
   Serial.println("------------------------------");
 
   Serial.printf("Connecting to %s ", ssid);
@@ -29,8 +32,10 @@ void setup() {
     delay(500);
     Serial.print(".");      
   }
-  Serial.print(" connected ");
+  
+  Serial.print(" connected with ");
   Serial.println(WiFi.localIP());
+  Serial.println("------------------------------");
 }
 
 void loop() {
@@ -51,7 +56,7 @@ void loop() {
 
   StaticJsonBuffer<200> jsonBuffer; 
   JsonObject& root = jsonBuffer.createObject(); 
-  root["sensorId"] = sensor_id; 
+  root["sensorId"] = macAddress; 
   root["temperature"] = t; 
   root["humidity"] = h; 
   String jsonStr;
