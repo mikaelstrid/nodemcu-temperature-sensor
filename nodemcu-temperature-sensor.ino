@@ -42,13 +42,21 @@ void setup() {
 
 
   // === READ SENSOR ===
+  int i = 1;
   float t = dht.readTemperature();
   float h = dht.readHumidity();
-
-  if (isnan(t) || isnan(t)) {
-    Serial.println("Failed to read temperature/humidity from sensor");
-    goToSleep();
-    return;
+  while (isnan(t) || isnan(t)) {
+    Serial.printf("Failed to read temperature/humidity from sensor (%d/10)\n", i);
+    if (i < 10) {
+      delay(1000);
+      i++;
+      t = dht.readTemperature();
+      h = dht.readHumidity();
+    } else {
+      Serial.println("Give up and go to deep sleep");      
+      goToSleep();
+      return;
+    }
   }
 
 
