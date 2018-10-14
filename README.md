@@ -13,10 +13,13 @@ The following hardware components are used
 ### Wiring
 The pin numbers on the AM2320 is from left to right when you hold the sensor with the holes facing you.
 
-Connect
+AM2320
 * pin 1 on the AM2320 to 3V3 on the NodeMCU.
 * pin 2 on the AM2320 to D2 on the NodeMCU.
 * pin 3 and 3 on the AM2320 to GND on the NodeMCU.
+
+Deep sleep
+* Connect D0 and RST on the NodeMCU.
 
 
 ## Softare setup
