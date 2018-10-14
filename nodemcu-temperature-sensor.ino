@@ -20,7 +20,7 @@ DHT dht(DHTPIN, DHTTYPE);
 
 void goToSleep() {
   Serial.printf("Going into deep sleep for %d seconds\n", sleepInSeconds);
-  ESP.deepSleep(sleepInSeconds * 10e6); 
+  ESP.deepSleep(sleepInSeconds * 1e6); 
   Serial.println("------------------------------");
 }
 
@@ -35,20 +35,10 @@ void setup() {
   Serial.print("MAC address: ");
   Serial.println(macAddress);
 
-  // === CONNECT TO WIFI ===
-  Serial.printf("Connecting to %s ", ssid);
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");      
-  }
-  Serial.print(" connected with ");
-  Serial.println(WiFi.localIP());
-
 
   // === READ SENSOR ===
+  Serial.println("------------------------------");
+  Serial.println("Reading AM2320 temperature/humidity sensor...");
   delay(2000);
   int i = 1;
   float t = dht.readTemperature();
@@ -61,12 +51,13 @@ void setup() {
       t = dht.readTemperature();
       h = dht.readHumidity();
     } else {
-      Serial.println("Give up and go to deep sleep");      
+      Serial.println("Give up sensor reading and go to deep sleep");      
       goToSleep();
       return;
     }
   }
-
+  Serial.println("Reading completed succsssfully.");
+  
 
   // === CREATE JSON STRING ===
   StaticJsonBuffer<200> jsonBuffer; 
@@ -77,6 +68,28 @@ void setup() {
   String jsonStr;
   root.printTo(jsonStr);
   Serial.println(jsonStr);
+
+
+  // === CONNECT TO WIFI ===
+  Serial.printf("Connecting to %s ", ssid);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  int j = 1;
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    if (j < 60) {
+      delay(500);
+      Serial.print(".");
+      j++;
+    } else {
+      Serial.println("Give up WiFi connect and go to deep sleep");      
+      WiFi.disconnect();
+      goToSleep();
+      return;
+    }
+  }
+  Serial.print("\nConnected with ");
+  Serial.println(WiFi.localIP());
 
   
   // === SEND TO API ===
@@ -91,9 +104,10 @@ void setup() {
   } else {
     Serial.printf("Failed to connect to host %s with response code %d and error %s\n", host, httpResponseCode, http.errorToString(httpResponseCode).c_str());
   }
+  http.end();
+  WiFi.disconnect();
 
-
-  // GO TO SLEEP
+  // === GO TO SLEEP ===
   goToSleep();
 }
 
