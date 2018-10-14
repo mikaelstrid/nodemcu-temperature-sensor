@@ -8,13 +8,20 @@
 
 const char* ssid = "SSID";
 const char* password = "PASSWORD";
-const char* host = "http://192.168.86.34:8080/api/climate/temperature-humidity";
+
+const char* host = "smarthomereceiversappservice.azurewebsites.net";
+const char* uri = "/api/TemperatureHumidity";
+const int httpsPort = 443;
+
+const int sleepInSeconds = 20;
+const char* fingerprint = "3ab0b1c27f746fd90c34f0d6a960cf73a4229de8";
 
 DHT dht(DHTPIN, DHTTYPE);
 
 void goToSleep() {
-  Serial.println("Going into deep sleep for 20 seconds");
-  ESP.deepSleep(20e6); // 20e6 is 20 microseconds
+  Serial.printf("Going into deep sleep for %d seconds\n", sleepInSeconds);
+  ESP.deepSleep(sleepInSeconds * 10e6); 
+  Serial.println("------------------------------");
 }
 
 void setup() {
@@ -23,13 +30,14 @@ void setup() {
   while (!Serial) {}
 
   String macAddress = WiFi.macAddress();
+  Serial.println("------------------------------");
   Serial.print("\nTemperature/humidity sensor started");
   Serial.print("MAC address: ");
   Serial.println(macAddress);
-  Serial.println("------------------------------");
 
   // === CONNECT TO WIFI ===
   Serial.printf("Connecting to %s ", ssid);
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -38,7 +46,6 @@ void setup() {
   }
   Serial.print(" connected with ");
   Serial.println(WiFi.localIP());
-  Serial.println("------------------------------");
 
 
   // === READ SENSOR ===
@@ -74,7 +81,7 @@ void setup() {
   
   // === SEND TO API ===
   HTTPClient http;
-  http.begin(host);
+  http.begin(host, httpsPort, uri, true, fingerprint);
   http.addHeader("Content-Type", "application/json");
   int httpResponseCode = http.POST(jsonStr);
 
